@@ -5,9 +5,8 @@ Prerequisites:
 --------------
 - Diamex Nixie with programmed Digi-Dot-Booster firmware
 - WT51822-S4AT or any other nRF51822 based module programmed with [mbed BLE_DD-Booster](https://developer.mbed.org/users/Gamadril/code/BLE_DD-Booster/) firmware
+- Mac or Linux system, Web Bluetooth support on Windows 10 is very poor
 - Latest Chrome version with Web Bluetooth support
-
-More info about hardware combination here: http://www.ledswork.de/wp/2017/03/12/ble-web-app-zur-steuerung-eines-diamex-nixies/
 
 Usage
 -----
