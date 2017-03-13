@@ -8,6 +8,9 @@ Prerequisites:
 - Mac or Linux system, Web Bluetooth support on Windows 10 is very poor
 - Latest Chrome version with Web Bluetooth support
 
+
+Check also current support status [here](https://github.com/WebBluetoothCG/web-bluetooth/blob/master/implementation-status.md).
+
 Usage
 -----
 If you have your hardware setup properly just open the [Web App](http://gamadril.github.io/BLE-Nixie) and press the button to scan for the device and connect to it. Control the Nixie with the color wheel on the first page and the digit selector on the second page.
