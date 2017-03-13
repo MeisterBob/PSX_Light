@@ -1,0 +1,19 @@
+{
+    "name": "NIXIE-control",
+    "version": "1.0.0",
+    "description": "Digi-Dot-Booster BLE control example using DIamex NIXIE",
+    "main": "index.js",
+    "author": "Gamadril",
+    "license": "MIT",
+    "dependencies": {
+        "riot": "^3.0.0"
+    },
+    "devDependencies": {
+        "eslint-plugin-riot": "^0.1.6",
+        "rollup": "^0.41.4",
+        "rollup-plugin-eslint": "^3.0.0",
+        "rollup-plugin-riot": "^0.4.3",
+        "rollup-plugin-uglify": "^1.0.1",
+        "uglify-js": "github:mishoo/UglifyJS2#harmony"
+    }
+}

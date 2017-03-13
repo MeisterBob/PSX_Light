@@ -1,0 +1,15 @@
+<footer-button>
+    <div each={ buttons } class="button {selected: activeTab === type}" onclick="{ footerButtonClick }">
+        <div class="icon">{ this.root.innerHTML = icon }</div>
+        <div class="title">{ title }</div>
+    </div>
+    <div class="button {selected: this.selected === true}">
+    </div>
+
+    <script>
+        var tag = this;
+        tag.icon = opts.icon;
+        tag.title = opts.title;
+        tag.selected = opts.selected;
+    </script>
+</footer-button>

@@ -1,0 +1,240 @@
+import BleUART from './js/bluetooth';
+
+<app>
+    <div class="work">
+        <div class="container">
+            <color-tab ref="colortab" class="contentarea" color="#FFFFFF"></color-tab>
+            <digit-tab ref="digittab" class="contentarea" digit="0"></digit-tab>
+        </div>
+        <div class="wrapper_msg invisible">
+            <div ref="message"></div>
+        </div>
+    </div>
+    <div class="footer">
+        <div each={ buttons } class="button {selected: activeTab === type}" onclick="{ footerButtonClick }">
+            <div class="icon">{ icon }</div>
+            <div class="title">{ title }</div>
+        </div>
+    </div>
+    <connect-dialog show="{showConnect}" ref="connectdialog"></connect-dialog>
+
+    <script>
+        var self = this;
+        var LED_MAP = [5, 0, 6, 1, 7, 2, 8, 3, 9, 4];
+        var ble = new BleUART();
+        self.showConnect = true;
+        self.currentColor = {
+            r: 255,
+            g: 255,
+            b: 255
+        };
+        self.currentDigit = 0;
+
+        self.buttons = [{
+            title: 'Color',
+            icon: 'b',
+            type: 'color'
+        }, {
+            title: 'Digit',
+            icon: 'n',
+            type: 'digit'
+        }];
+        self.activeTab = 'color';
+
+        ble.on('disconnect', function() {
+            self.showConnect = true;
+            self.update();
+        });
+
+        self.on('mount', function() {
+            self.refs.colortab.on('color', function(value) {
+                self.currentColor = value;
+                sendValuesToDDB();
+            });
+
+            self.refs.digittab.on('digit', function(value) {
+                self.currentDigit = value;
+                sendValuesToDDB();
+            });
+
+            self.refs.connectdialog.on('connect', function() {
+                ble.connect().then(() => {
+                    self.showConnect = false;
+                    self.update();
+                    showMessage('connected', 'status');
+                    ble.send([0xB1, 10, 24])
+                        .catch(error => {
+                            self.sending = false;
+                            showMessage(error, 'error')
+                        });
+                }).catch(error => showMessage(error, 'error'));
+            });
+        });
+
+        self.footerButtonClick = (event) => {
+            self.update({
+                activeTab: event.item.type
+            });
+            var area, index;
+            area = self.refs[event.item.type + 'tab'].root;
+            index = area.offsetLeft / area.clientWidth;
+            area.parentElement.style.left = (-index * 100) + '%';
+        }
+
+        /**
+         * Shows a message as notification for the user
+         * @param {String} text - message text
+         * @param {String} type - message type (status or error)
+         */
+        function showMessage(text, type) {
+            self.refs.message.className = type;
+            self.refs.message.textContent = text;
+
+            self.refs.message.parentElement.classList.remove('invisible');
+
+            if (self.timer) {
+                clearTimeout(self.timer);
+            }
+            self.timer = setTimeout(function() {
+                self.refs.message.parentElement.classList.add('invisible');
+                self.timer = null;
+            }, 5000);
+        }
+
+        function sendValuesToDDB() {
+            var clearAll = [0xA1, 0, 0, 0, 0xA5],
+                setRGB = [0xA1, self.currentColor.r, self.currentColor.g, self.currentColor.b],
+                setLED = [0xA4, LED_MAP[self.currentDigit]],
+                show = [0xB2];
+            if (!self.sending) {
+                self.sending = true;
+                ble.send(clearAll.concat(setRGB, setLED, show))
+                    .then(() => {
+                        self.sending = false;
+                    }).catch(error => {
+                        self.sending = false;
+                        showMessage(error, 'error')
+                    });
+            }
+        }
+    </script>
+
+
+    <style>
+        app {
+            height: 100%;
+            width: 100%;
+            display: -webkit-flex;
+            -webkit-flex-direction: column;
+            -webkit-flex-wrap: nowrap;
+            display: flex;
+            flex-direction: column;
+            flex-wrap: nowrap;
+            background-color: #2C2C2C;
+            min-width: 320px;
+            min-height: 460px;
+        }
+
+        .work {
+            -webkit-flex: 1;
+            flex: 1;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .container {
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 200%;
+            display: flex;
+            display: -webkit-flex;
+            -webkit-transition: left 0.5s ease-in-out;
+            transition: left 0.5s ease-in-out;
+        }
+
+        .contentarea {
+            width: 100%;
+            height: 100%;
+            overflow-y: overlay;
+            -ms-overflow-y: auto;
+            -ms-overflow-style: -ms-autohiding-scrollbar;
+            position: relative;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .info {
+            font-size: 16px;
+            position: absolute;
+            top: 50%;
+            width: 100%;
+            text-align: center;
+        }
+
+        .footer {
+            border-top: 1px solid #919F9F;
+            display: -webkit-flex;
+            -webkit-justify-content: space-around;
+            display: flex;
+            justify-content: space-around;
+        }
+
+        .footer .button:active,
+        .footer .button.selected {
+            color: #FFFFFF;
+        }
+
+        .footer .button {
+            width: 100%;
+            text-align: center;
+            position: relative;
+            padding: 5px;
+        }
+
+        .footer .button .icon {
+            font-size: 25px;
+            margin-top: 8px;
+        }
+
+        .footer .button .title {
+            font-size: 12px;
+            margin-top: 8px;
+            margin-bottom: 8px;
+        }
+
+        .wrapper_msg {
+            position: absolute;
+            bottom: 5px;
+            width: 100%;
+            display: -webkit-flex;
+            display: flex;
+            visibility: visible;
+            opacity: 1;
+            -webkit-transition: opacity 0.2s linear;
+            transition: opacity 0.2s linear;
+            justify-content: center;
+        }
+
+        .error {
+            background-color: #D70000;
+            color: #FFFFFF;
+        }
+
+        .status {
+            background-color: #00A200;
+            color: #FFFFFF;
+        }
+
+        .wrapper_msg>div {
+            padding: 5px 10px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .contentarea {
+            display: flex;
+            flex-direction: column;
+        }
+    </style>
+</app>

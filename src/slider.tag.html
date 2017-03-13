@@ -1,0 +1,91 @@
+<slider>
+    <div class="track"></div>
+    <div class="thumb" style="left: {((value - min) * 100 / (max - min))}%"></div>
+
+    <script>
+        var self = this;
+        self.min = opts.min || 0;
+        self.max = opts.max || 100;
+        self.value = opts.value || 0;
+        self.step = opts.step || 1;
+
+        self.setValue = function(value) {
+            self.value = value || 0;
+            self.update();
+        };
+
+        function handleEvent(event) {
+            var x, left, ratio, value, steppedValue;
+            if (event.touches) {
+                x = event.touches[0].clientX;
+            } else {
+                x = event.clientX;
+            }
+
+            left = x - self.root.getBoundingClientRect().left;
+            ratio = left / self.root.offsetWidth;
+            value = (self.max - self.min) * ratio;
+
+            steppedValue = (value - self.min) % self.step;
+            if (steppedValue <= self.step / 2) {
+                value = value - steppedValue;
+            } else {
+                value = value + (self.step - steppedValue);
+            }
+
+            value = Math.max(value, self.min);
+            value = Math.min(value, self.max);
+            self.value = value;
+            self.update();
+            self.trigger('value', value);
+        }
+
+        function pointerMoveEventHandler(event) {
+            if (self.drag) {
+                handleEvent(event);
+                event.preventDefault();
+            }
+        }
+
+        function pointerUpEventHandler() {
+            self.drag = false;
+            self.update();
+            window.removePointerMoveHandler(document, pointerMoveEventHandler);
+            window.removePointerUpHandler(document, pointerUpEventHandler);
+        }
+
+        window.addPointerDownHandler(self.root, function(event) {
+            self.drag = true;
+            handleEvent(event, this);
+            window.addPointerMoveHandler(document, pointerMoveEventHandler);
+            window.addPointerUpHandler(document, pointerUpEventHandler);
+        });
+    </script>
+
+    <style>
+        slider {
+            position: relative;
+            margin-left: 20px;
+            margin-right: 20px;
+        }
+
+        .thumb {
+            box-sizing: border-box;
+            border-radius: 10px;
+            height: 20px;
+            width: 20px;
+            border: 2px solid #BDC3C7;
+            background-color: #FFFFFF;
+            position: absolute;
+            top: -8px;
+            margin-left: -10px;
+        }
+
+        .track {
+            border-radius: 4px;
+            height: 4px;
+            border: 1px solid #BDC3C7;
+            background-color: #FFFFFF;
+        }
+    </style>
+</slider>

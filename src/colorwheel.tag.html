@@ -1,0 +1,179 @@
+/* global tinycolor */
+
+<colorwheel>
+    <img id="colorwheel" ref="colorwheel" src="res/colorwheel.png" width="auto" height="90%" onload="{imageLoaded}" />
+
+    <div id="pointer" ref="pointer" style="left: {pointerLeft}px; top: {pointerTop}px; background-color: {pointerColor};"></div>
+    <div class="touchrect"></div>
+
+    <script>
+        var self = this;
+        self.color = new tinycolor(opts.color);
+
+        self.setColor = function(color) {
+            self.color = new tinycolor(color);
+            if (self.isMounted) {
+                self.update();
+            }
+        };
+
+        self.on('update', function() {
+            updatePointer();
+        });
+
+        self.on('mount', function() {
+            var touchrect = self.root.querySelector('.touchrect');
+            window.addPointerDownHandler(touchrect, function(event) {
+                self.drag = true;
+                handleEvent(event);
+            });
+
+            window.addPointerMoveHandler(touchrect, function(event) {
+                if (self.drag) {
+                    handleEvent(event);
+                    event.preventDefault();
+                }
+            });
+
+            window.addPointerUpHandler(touchrect, function() {
+                self.drag = false;
+            });
+
+            onResize();
+        });
+
+        function getPointFromColor(color) {
+            var t, x, y, p = {};
+
+            t = color.h * (Math.PI / 180);
+            y = Math.sin(t) * self.cpradius * color.s;
+            x = Math.cos(t) * self.cpradius * color.s;
+
+            p.x = Math.round(x + self.refs.colorwheel.offsetLeft + self.cpradius);
+            p.y = Math.round(self.cpradius - y + self.refs.colorwheel.offsetTop);
+
+            return p;
+        }
+
+        function getColorFromPoint(p) {
+            var h, t, s, x, y;
+            x = p.x - self.refs.colorwheel.offsetLeft - self.cpradius;
+            y = self.cpradius - p.y + self.refs.colorwheel.offsetTop;
+            t = Math.atan2(y, x);
+            h = (t * (180 / Math.PI) + 360) % 360;
+            s = Math.min(Math.sqrt(x * x + y * y) / self.cpradius, 1);
+
+            return new tinycolor({
+                h: h,
+                s: s,
+                v: 1
+            });
+        }
+
+        function getCirclePoint(x, y) {
+            var p = {
+                    x: x,
+                    y: y
+                },
+                c = {
+                    x: self.refs.colorwheel.offsetLeft + self.cpradius,
+                    y: self.refs.colorwheel.offsetTop + self.cpradius
+                },
+                n;
+
+            n = Math.sqrt(Math.pow((x - c.x), 2) + Math.pow((y - c.y), 2));
+
+            if (n > self.cpradius) {
+                p.x = (c.x) + self.cpradius * ((x - c.x) / n);
+                p.y = (c.y) + self.cpradius * ((y - c.y) / n);
+            }
+
+            return p;
+        }
+
+        function updatePointer() {
+            var point = getPointFromColor(self.color.toHsv());
+            self.pointerLeft = (point.x - self.refs.pointer.offsetWidth / 2);
+            self.pointerTop = (point.y - self.refs.pointer.offsetHeight / 2);
+            self.pointerColor = self.color.toHexString();
+        }
+
+        function handleEvent(event) {
+            var point, x, y;
+
+            if (event.touches) {
+                x = event.touches[0].clientX;
+                y = event.touches[0].clientY;
+            } else {
+                x = event.clientX;
+                y = event.clientY;
+            }
+            point = getCirclePoint(x, y);
+            self.color = getColorFromPoint(point);
+            self.update();
+            fireEvent();
+        }
+
+        function fireEvent() {
+            self.trigger('color', self.color.toRgb());
+        }
+
+        function imageLoaded(event) {
+            self.cpradius = event.target.offsetWidth / 2;
+            self.cpcenter = event.target.offsetLeft + self.cpradius;
+            self.update();
+        }
+        self.imageLoaded = imageLoaded;
+
+        window.addEventListener('resize', onResize);
+
+        function onResize() {
+            var attrW, attrH, side, w = self.root.clientWidth,
+                h = self.root.clientHeight;
+
+            attrW = self.refs.colorwheel.getAttribute('width');
+            attrH = self.refs.colorwheel.getAttribute('height');
+            side = attrW === 'auto' ? attrH : attrW;
+            if (w > h) {
+                if (attrH !== side) {
+                    self.refs.colorwheel.setAttribute('height', side);
+                    self.refs.colorwheel.setAttribute('width', 'auto');
+                }
+            } else if (attrW !== side) {
+                self.refs.colorwheel.setAttribute('height', 'auto');
+                self.refs.colorwheel.setAttribute('width', side);
+            }
+
+            self.cpradius = self.refs.colorwheel.offsetWidth / 2;
+            self.cpcenter = self.refs.colorwheel.offsetLeft + self.cpradius;
+            self.update();
+        }
+    </script>
+
+    <style>
+        colorwheel {
+            position: relative;
+            -webkit-flex: 1;
+            flex: 1;
+        }
+
+        #colorwheel {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            margin: auto;
+        }
+
+        #pointer {
+            width: 30px;
+            height: 30px;
+            position: absolute;
+            border: 2px solid #FFFFFF;
+            border-radius: 15px;
+            left: calc(50% - 15px);
+            top: calc(50% - 15px);
+        }
+    </style>
+</colorwheel>
