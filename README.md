@@ -1,5 +1,5 @@
 # BLE-Nixie-App
-This is a sample web app which uses Web Bluetooth API to control a Diamex Nixie combined with a WT51822-S4AT module.
+This is a sample web app which uses Web Bluetooth API to control a Diamex Cronixie module combined with a WT51822-S4AT module.
 
 Prerequisites:
 --------------
