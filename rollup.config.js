@@ -7,9 +7,11 @@ import {
 } from 'uglify-js';
 
 export default {
-    entry: 'src/js/main.js',
-    dest: 'src/js/main.min.js',
-    format: 'iife',
+    input: 'src/js/main.js',
+    output: {
+        file: 'src/js/main.min.js',
+        format: 'iife'
+    },
     globals: {
         riot: 'riot'
     },

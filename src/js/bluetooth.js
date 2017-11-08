@@ -18,18 +18,21 @@ export default class Bluetooth {
      * Connects to the DD-Booster
      */
     connect() {
-        return new Promise(function(resolve, reject) {
+        return new Promise((resolve, reject) => {
             if (this.device) {
                 if (this.device.gatt.connected) {
                     resolve();
                 } else {
-                    this.device.gatt.connect().then(server => {
-                        return server.getPrimaryService(NUS_SERVICE_UUID);
-                    }).then(service => {
-                        return service.getCharacteristic(NUS_RX_CHARACTERISTIC_UUID);
-                    }).then(characteristic => {
-                        this.characteristic = characteristic;
-                    }).then(() => resolve()).catch(error => reject(error));
+                    this.device.gatt.connect()
+                        .then(server => {
+                            return server.getPrimaryService(NUS_SERVICE_UUID);
+                        }).then(service => {
+                            return service.getCharacteristic(NUS_RX_CHARACTERISTIC_UUID);
+                        }).then(characteristic => {
+                            this.characteristic = characteristic;
+                        }).then(() => {
+                            resolve();
+                        }).catch(error => reject(error));
                 }
             } else {
                 navigator.bluetooth.requestDevice({
@@ -48,12 +51,13 @@ export default class Bluetooth {
                     return service.getCharacteristic(NUS_RX_CHARACTERISTIC_UUID);
                 }).then(characteristic => {
                     this.characteristic = characteristic;
-                }).then(() => resolve()).catch(error => {
+                }).then(() => {
+                    resolve();
+                }).catch(error => {
                     reject(error);
                 });
-
             }
-        }.bind(this));
+        });
     }
 
     /**
@@ -62,6 +66,7 @@ export default class Bluetooth {
     disconnect() {
         if (this.device && this.device.gatt.connected) {
             this.device.gatt.disconnect();
+            this.device = null;
         }
     }
 
@@ -70,17 +75,19 @@ export default class Bluetooth {
      * @param {Array} data - Data to send
      */
     send(data) {
-        return new Promise(function(resolve, reject) {
+        return new Promise((resolve, reject) => {
             if (!this.device || !this.device.gatt.connected || !this.characteristic) {
                 reject('Not connected');
                 return;
             }
 
             this.characteristic.writeValue(new Uint8Array(data))
-                .then(() => resolve()).catch(error => {
+                .then(() => {
+                    resolve();
+                }).catch(error => {
                     reject(error);
                 });
-        }.bind(this));
+        });
     }
 
     /**

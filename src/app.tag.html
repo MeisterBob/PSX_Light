@@ -41,33 +41,36 @@ import BleUART from './js/bluetooth';
         }];
         self.activeTab = 'color';
 
-        ble.on('disconnect', function() {
+        ble.on('disconnect', () => {
+            stopConnectionTimer();
             self.showConnect = true;
             self.update();
         });
 
-        self.on('mount', function() {
-            self.refs.colortab.on('color', function(value) {
+        self.on('mount', () => {
+            self.refs.colortab.on('color', value => {
                 self.currentColor = value;
                 sendValuesToDDB();
             });
 
-            self.refs.digittab.on('digit', function(value) {
+            self.refs.digittab.on('digit', value => {
                 self.currentDigit = value;
                 sendValuesToDDB();
             });
 
-            self.refs.connectdialog.on('connect', function() {
-                ble.connect().then(() => {
-                    self.showConnect = false;
-                    self.update();
-                    showMessage('connected', 'status');
-                    ble.send([0xB1, 10, 24])
-                        .catch(error => {
-                            self.sending = false;
-                            showMessage(error, 'error')
-                        });
-                }).catch(error => showMessage(error, 'error'));
+            self.refs.connectdialog.on('connect', () => {
+                ble.connect()
+                    .then(() => {
+                        startConnectionTimer();
+                        self.showConnect = false;
+                        self.update();
+                        showMessage('connected', 'status');
+                        ble.send([0xB1, 10, 24])
+                            .catch(error => {
+                                self.sending = false;
+                                showMessage(error, 'error')
+                            });
+                    }).catch(error => showMessage(error, 'error'));
             });
         });
 
@@ -79,7 +82,34 @@ import BleUART from './js/bluetooth';
             area = self.refs[event.item.type + 'tab'].root;
             index = area.offsetLeft / area.clientWidth;
             area.parentElement.style.left = (-index * 100) + '%';
-        }
+        };
+
+        function stopConnectionTimer() {
+            if (self.connectionTimer) {
+                clearTimeout(self.connectionTimer);
+                self.connectionTimer = null;
+            }
+        };
+
+        function resetConnectionTimer() {
+            stopConnectionTimer();
+            startConnectionTimer();
+        };
+
+        function startConnectionTimer() {
+            self.connectionTimer = setTimeout(() => {
+                stopConnectionTimer();
+                self.showConnect = true;
+                self.update();
+                ble.send([0xA1, 0, 0, 0, 0xA5, 0xB2])
+                    .then(() => {
+                        ble.disconnect();
+                    }).catch(error => {
+                        self.sending = false;
+                        showMessage(error, 'error')
+                    })
+            }, 10000);
+        };
 
         /**
          * Shows a message as notification for the user
@@ -95,7 +125,7 @@ import BleUART from './js/bluetooth';
             if (self.timer) {
                 clearTimeout(self.timer);
             }
-            self.timer = setTimeout(function() {
+            self.timer = setTimeout(function () {
                 self.refs.message.parentElement.classList.add('invisible');
                 self.timer = null;
             }, 5000);
@@ -106,7 +136,9 @@ import BleUART from './js/bluetooth';
                 setRGB = [0xA1, self.currentColor.r, self.currentColor.g, self.currentColor.b],
                 setLED = [0xA4, LED_MAP[self.currentDigit]],
                 show = [0xB2];
+
             if (!self.sending) {
+                resetConnectionTimer();
                 self.sending = true;
                 ble.send(clearAll.concat(setRGB, setLED, show))
                     .then(() => {
