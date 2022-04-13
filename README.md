@@ -1,19 +1,9 @@
-# BLE-Nixie-App
-This is a sample web app which uses Web Bluetooth API to control a Diamex LED nixie module combined with a WT51822-S4AT module.
-
-Prerequisites:
---------------
-- Diamex LED nixie module with programmed Digi-Dot-Booster firmware (if present on board) or additional DD-Booster
-- WT51822-S4AT or any other nRF51822 based module programmed with [mbed BLE_DD-Booster](https://developer.mbed.org/users/Gamadril/code/BLE_DD-Booster/) firmware
-- Mac or Linux system, Web Bluetooth support on Windows 10 is very poor
-- Latest Chrome version with Web Bluetooth support
-
-
-Check also current support status [here](https://github.com/WebBluetoothCG/web-bluetooth/blob/master/implementation-status.md).
+# BLE-PSX_Light-App
+This is a web app which uses Web Bluetooth API to control a PSX-Light.
 
 Usage
 -----
-If you have your hardware setup properly just open the [Web App](http://gamadril.github.io/BLE-Nixie) and press the button to scan for the device and connect to it. Control the module with the color wheel on the first page and the digit selector on the second page.
+If you have your hardware setup properly just open the [Web App](http://meisterbob.github.io/PSX_Light_control) and press the button to scan for the device and connect to it. Control the PSX-Light with the color wheel.
 
 Development
 -----------

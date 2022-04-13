@@ -1,46 +1,95 @@
 /* global tinycolor */
 
 <colorwheel>
-    <img id="colorwheel" ref="colorwheel" src="res/colorwheel.png" width="auto" height="90%" onload="{imageLoaded}" />
+    <img id="colorwheel" ref="colorwheel" src="res/colorwheel.png" width="auto"
+        height="90%" onload="{imageLoaded}" />
 
-    <div id="pointer" ref="pointer" style="left: {pointerLeft}px; top: {pointerTop}px; background-color: {pointerColor};"></div>
     <div class="touchrect"></div>
+
+    <div id="pointerT" ref="pointerT"
+        style="left: {pointerTLeft}px; top: {pointerTTop}px; background-color: {pointerTColor};">
+    </div>
+    <div id="pointerO" ref="pointerO"
+        style="left: {pointerOLeft}px; top: {pointerOTop}px; background-color: {pointerOColor};">
+    </div>
+    <div id="pointerX" ref="pointerX"
+        style="left: {pointerXLeft}px; top: {pointerXTop}px; background-color: {pointerXColor};">
+    </div>
+    <div id="pointerS" ref="pointerS"
+        style="left: {pointerSLeft}px; top: {pointerSTop}px; background-color: {pointerSColor};">
+    </div>
+
+    <div class="wrapper_msg invisible">
+        <div ref="message"></div>
+    </div>
 
     <script>
         var self = this;
         self.color = new tinycolor(opts.color);
+        self.actualPointer = -1;
 
-        self.setColor = function(color) {
+        self.setColor = function (color) {
             self.color = new tinycolor(color);
             if (self.isMounted) {
                 self.update();
             }
         };
 
-        self.on('update', function() {
-            updatePointer();
+        self.on('update', function () {
+            updatePointer(self.actualPointer);
         });
 
-        self.on('mount', function() {
-            var touchrect = self.root.querySelector('.touchrect');
-            window.addPointerDownHandler(touchrect, function(event) {
+        self.on('mount', function () {
+            self.pointerTTop = self.refs.colorwheel.offsetTop + self.refs.colorwheel.height / 2 - 30;
+            self.pointerOLeft = self.refs.colorwheel.offsetLeft + 30;
+            self.pointerXTop = self.refs.colorwheel.offsetTop + self.refs.colorwheel.height / 2 + 30;
+            self.pointerSLeft = self.refs.colorwheel.offsetLeft - 30;
+
+            var pointerS = self.root.querySelector('#pointerS');
+            var pointerT = self.root.querySelector('#pointerT');
+            var pointerO = self.root.querySelector('#pointerO');
+            var pointerX = self.root.querySelector('#pointerX');
+            addHandlers(pointerS);
+            addHandlers(pointerT);
+            addHandlers(pointerO);
+            addHandlers(pointerX);
+
+            onResize();
+        });
+
+        function addHandlers(pointer) {
+            window.addPointerDownHandler(pointer, function (event) {
                 self.drag = true;
+                switch (event.toElement.id) {
+                    case "pointerT":
+                        self.actualPointer = 0;
+                        break;
+                    case "pointerO":
+                        self.actualPointer = 1;
+                        break;
+                    case "pointerX":
+                        self.actualPointer = 2;
+                        break;
+                    case "pointerS":
+                        self.actualPointer = 3;
+                        break;
+                    default:
+                        console.log("wo hast du geklickt?");
+                }
                 handleEvent(event);
             });
 
-            window.addPointerMoveHandler(touchrect, function(event) {
+            window.addPointerMoveHandler(pointer, function (event) {
                 if (self.drag) {
                     handleEvent(event);
                     event.preventDefault();
                 }
             });
 
-            window.addPointerUpHandler(touchrect, function() {
+            window.addPointerUpHandler(pointer, function () {
                 self.drag = false;
             });
-
-            onResize();
-        });
+        }
 
         function getPointFromColor(color) {
             var t, x, y, p = {};
@@ -72,9 +121,9 @@
 
         function getCirclePoint(x, y) {
             var p = {
-                    x: x,
-                    y: y
-                },
+                x: x,
+                y: y
+            },
                 c = {
                     x: self.refs.colorwheel.offsetLeft + self.cpradius,
                     y: self.refs.colorwheel.offsetTop + self.cpradius
@@ -91,11 +140,30 @@
             return p;
         }
 
-        function updatePointer() {
+        function updatePointer(id) {
             var point = getPointFromColor(self.color.toHsv());
-            self.pointerLeft = (point.x - self.refs.pointer.offsetWidth / 2);
-            self.pointerTop = (point.y - self.refs.pointer.offsetHeight / 2);
-            self.pointerColor = self.color.toHexString();
+            switch (id) {
+                case 0:
+                    self.pointerTLeft = (point.x - 25);
+                    self.pointerTTop = (point.y - 25);
+                    // self.pointerTColor = self.color.toHexString();
+                    break;
+                case 1:
+                    self.pointerOLeft = (point.x - 25);
+                    self.pointerOTop = (point.y - 25);
+                    // self.pointerOColor = self.color.toHexString();
+                    break;
+                case 2:
+                    self.pointerXLeft = (point.x - 25);
+                    self.pointerXTop = (point.y - 25);
+                    // self.pointerXColor = self.color.toHexString();
+                    break;
+                case 3:
+                    self.pointerSLeft = (point.x - 25);
+                    self.pointerSTop = (point.y - 25);
+                    // self.pointerSColor = self.color.toHexString();
+                    break;
+            }
         }
 
         function handleEvent(event) {
@@ -110,12 +178,16 @@
             }
             point = getCirclePoint(x, y);
             self.color = getColorFromPoint(point);
+
+            showMessage(self.actualPointer, 'status');
+
             self.update();
             fireEvent();
         }
 
         function fireEvent() {
-            self.trigger('color', self.color.toRgb());
+            var data = { color: self.color.toRgb(), pointer: self.actualPointer };
+            self.trigger('color', data);
         }
 
         function imageLoaded(event) {
@@ -148,6 +220,22 @@
             self.cpcenter = self.refs.colorwheel.offsetLeft + self.cpradius;
             self.update();
         }
+
+        function showMessage(text, type) {
+            self.refs.message.className = type;
+            self.refs.message.textContent = text;
+
+            self.refs.message.parentElement.classList.remove('invisible');
+
+            if (self.timer) {
+                clearTimeout(self.timer);
+            }
+            self.timer = setTimeout(function () {
+                self.refs.message.parentElement.classList.add('invisible');
+                self.timer = null;
+            }, 5000);
+        }
+
     </script>
 
     <style>
@@ -166,14 +254,96 @@
             margin: auto;
         }
 
-        #pointer {
-            width: 30px;
-            height: 30px;
+        #pointerX,
+        #pointerO,
+        #pointerS,
+        #pointerT {
+            z-index: 2;
+        }
+
+        #pointerT {
+            /* Dreieck */
+
+            --t: 2px;
+            --c: white;
+
+            width: 50px;
+            position: absolute;
+            left: calc(50% - 25px);
+            top: calc(50% - 25px);
+            display: inline-block;
+            border: var(--t) solid transparent;
+            border-bottom-color: var(--c);
+            background:
+                /* Left side */
+                linear-gradient(to bottom left,
+                    transparent 49.5%, var(--c) 50% calc(50% + var(--t)),
+                    transparent calc(50% + var(--t) + 1px)) right,
+                /* right side */
+                linear-gradient(to bottom right,
+                    transparent 49.5%, var(--c) 50% calc(50% + var(--t)),
+                    transparent calc(50% + var(--t) + 1px)) left;
+            background-size: 50% 100%;
+            background-origin: border-box;
+            background-repeat: no-repeat;
+        }
+
+        #pointerT:before {
+            content: "";
+            display: block;
+            padding-top: 86.6%;
+        }
+
+        #pointerS {
+            /* Viereck */
+            width: 50px;
+            height: 50px;
             position: absolute;
             border: 2px solid #FFFFFF;
-            border-radius: 15px;
-            left: calc(50% - 15px);
-            top: calc(50% - 15px);
+            border-radius: 0;
+            left: calc(50% - 25px);
+            top: calc(50% - 25px);
+        }
+
+        #pointerO {
+            /* Kreis */
+            width: 50px;
+            height: 50px;
+            position: absolute;
+            border: 2px solid #FFFFFF;
+            border-radius: 25px;
+            left: calc(50% - 25px);
+            top: calc(50% - 25px);
+        }
+
+        #pointerX {
+            /* Kreuz */
+            width: 50px;
+            height: 50px;
+            position: absolute;
+            left: calc(50% - 25px);
+            top: calc(50% - 25px);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        #pointerX::before,
+        #pointerX::after {
+            position: absolute;
+            content: '';
+            width: 100%;
+            height: 4px;
+            /* cross thickness */
+            background-color: white;
+        }
+
+        #pointerX::before {
+            transform: rotate(45deg);
+        }
+
+        #pointerX::after {
+            transform: rotate(-45deg);
         }
     </style>
 </colorwheel>

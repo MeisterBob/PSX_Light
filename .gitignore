@@ -1,0 +1,4 @@
+node_modules/
+src/js/main.min.js
+src/favicon.ico
+package-lock.json

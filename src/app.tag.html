@@ -3,15 +3,17 @@ import BleUART from './js/bluetooth';
 <app>
     <div class="work">
         <div class="container">
-            <color-tab ref="colortab" class="contentarea" color="#FFFFFF"></color-tab>
-            <digit-tab ref="digittab" class="contentarea" digit="0"></digit-tab>
+            <color-tab ref="colortab" class="contentarea" color="#FFFFFF">
+            </color-tab>
+            <!-- <digit-tab ref="digittab" class="contentarea" digit="0"></digit-tab> -->
         </div>
         <div class="wrapper_msg invisible">
             <div ref="message"></div>
         </div>
     </div>
     <div class="footer">
-        <div each={ buttons } class="button {selected: activeTab === type}" onclick="{ footerButtonClick }">
+        <div each={ buttons } class="button {selected: activeTab === type}"
+            onclick="{ footerButtonClick }">
             <div class="icon">{ icon }</div>
             <div class="title">{ title }</div>
         </div>
@@ -34,11 +36,11 @@ import BleUART from './js/bluetooth';
             title: 'Color',
             icon: 'b',
             type: 'color'
-        }, {
+        }/* , {
             title: 'Digit',
             icon: 'n',
             type: 'digit'
-        }];
+        } */];
         self.activeTab = 'color';
 
         ble.on('disconnect', () => {
@@ -48,14 +50,10 @@ import BleUART from './js/bluetooth';
         });
 
         self.on('mount', () => {
-            self.refs.colortab.on('color', value => {
-                self.currentColor = value;
-                sendValuesToDDB();
-            });
-
-            self.refs.digittab.on('digit', value => {
-                self.currentDigit = value;
-                sendValuesToDDB();
+            self.refs.colortab.on('color', data => {
+                self.currentColor = data.color;
+                self.currentDigit = data.pointer;
+                sendValuesToPSXLight();
             });
 
             self.refs.connectdialog.on('connect', () => {
@@ -65,7 +63,7 @@ import BleUART from './js/bluetooth';
                         self.showConnect = false;
                         self.update();
                         showMessage('connected', 'status');
-                        ble.send([0xB1, 10, 24])
+                        ble.send([0xA0, 1])
                             .catch(error => {
                                 self.sending = false;
                                 showMessage(error, 'error')
@@ -101,14 +99,15 @@ import BleUART from './js/bluetooth';
                 stopConnectionTimer();
                 self.showConnect = true;
                 self.update();
-                ble.send([0xA1, 0, 0, 0, 0xA5, 0xB2])
+                ble.send([0xA0, 0x00])
                     .then(() => {
                         ble.disconnect();
+                        showMessage("disconnected", 'info');
                     }).catch(error => {
                         self.sending = false;
                         showMessage(error, 'error')
                     })
-            }, 10000);
+            }, 60000);
         };
 
         /**
@@ -131,16 +130,13 @@ import BleUART from './js/bluetooth';
             }, 5000);
         }
 
-        function sendValuesToDDB() {
-            var clearAll = [0xA1, 0, 0, 0, 0xA5],
-                setRGB = [0xA1, self.currentColor.r, self.currentColor.g, self.currentColor.b],
-                setLED = [0xA4, LED_MAP[self.currentDigit]],
-                show = [0xB2];
+        function sendValuesToPSXLight() {
+            var setRGB = [0xA1, self.currentDigit, self.currentColor.r, self.currentColor.g, self.currentColor.b]
 
             if (!self.sending) {
                 resetConnectionTimer();
                 self.sending = true;
-                ble.send(clearAll.concat(setRGB, setLED, show))
+                ble.send(setRGB)
                     .then(() => {
                         self.sending = false;
                     }).catch(error => {
@@ -179,7 +175,7 @@ import BleUART from './js/bluetooth';
             left: 0;
             top: 0;
             bottom: 0;
-            width: 200%;
+            width: 100%;
             display: flex;
             display: -webkit-flex;
             -webkit-transition: left 0.5s ease-in-out;

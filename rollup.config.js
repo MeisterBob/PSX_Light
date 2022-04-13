@@ -1,6 +1,4 @@
-//import json from 'rollup-plugin-json';
 import riot from 'rollup-plugin-riot';
-import eslint from 'rollup-plugin-eslint';
 import uglify from 'rollup-plugin-uglify';
 import {
     minify
@@ -10,7 +8,10 @@ export default {
     input: 'src/js/main.js',
     output: {
         file: 'src/js/main.min.js',
-        format: 'iife'
+        format: 'iife',
+        globals: {
+            "riot": "riot"
+        }
     },
     globals: {
         riot: 'riot'
@@ -21,11 +22,6 @@ export default {
     plugins: [
         riot({
             ext: 'html'
-        }),
-        eslint({
-            exclude: [
-                'src/styles/!**'
-            ]
         }),
         uglify({}, minify)
     ]

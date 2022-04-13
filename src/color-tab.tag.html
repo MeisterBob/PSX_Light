@@ -2,7 +2,8 @@
 
 <color-tab>
     <colorwheel ref="colorwheel" color="{color}"></colorwheel>
-    <slider ref="slider" min="0" max="1" step="0.02" value="{brightness}"></slider>
+    <slider ref="slider" min="0" max="1" step="0.02" value="{brightness}">
+    </slider>
     <div id="buttonctrl">
     </div>
     <script>
@@ -13,16 +14,18 @@
             b: 0xff
         });
         self.brightness = 0.3;
+        self.actualPointer = -1;
 
-        self.on('mount', function() {
-            self.refs.slider.on('value', function(value) {
+        self.on('mount', function () {
+            self.refs.slider.on('value', function (value) {
                 self.brightness = value;
                 self.update();
                 fireColorEvent();
             });
 
-            self.refs.colorwheel.on('color', function(value) {
-                self.color = new tinycolor(value);
+            self.refs.colorwheel.on('color', function (value) {
+                self.color = new tinycolor(value.color);
+                self.actualPointer = value.pointer;
                 self.update();
                 fireColorEvent();
             });
@@ -39,8 +42,8 @@
         }
 
         function fireColorEvent() {
-            var rgb = getCurrentColor();
-            self.trigger('color', rgb);
+            var data = { color: getCurrentColor(), pointer: self.actualPointer };
+            self.trigger('color', data);
         }
     </script>
 

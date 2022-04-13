@@ -1,7 +1,7 @@
 /* global riot */
 const NUS_SERVICE_UUID = '6e400001-b5a3-f393-e0a9-e50e24dcca9e';
 const NUS_RX_CHARACTERISTIC_UUID = '6e400002-b5a3-f393-e0a9-e50e24dcca9e';
-const DEVICE_NAME = 'DD-Booster';
+const DEVICE_NAME = 'PSX-Light';
 
 export default class Bluetooth {
     /**
@@ -15,7 +15,7 @@ export default class Bluetooth {
     }
 
     /**
-     * Connects to the DD-Booster
+     * Connects to the PSX-Light
      */
     connect() {
         return new Promise((resolve, reject) => {
@@ -71,7 +71,7 @@ export default class Bluetooth {
     }
 
     /**
-     * Send data to the DD-Booster
+     * Send data to the PSX-Light
      * @param {Array} data - Data to send
      */
     send(data) {
