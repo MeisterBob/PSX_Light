@@ -4,19 +4,27 @@
     <img id="colorwheel" ref="colorwheel" src="res/colorwheel.png" width="auto"
         height="90%" onload="{imageLoaded}" />
 
-    <div class="touchrect"></div>
+    <div class="touchrect" id="touchrect"></div>
 
     <div id="pointerT" ref="pointerT"
-        style="left: {pointerTLeft}px; top: {pointerTTop}px; background-color: {pointerTColor};">
+        style="left: {pointerTLeft}px; top: {pointerTTop}px;">
+        <svg height="50" width="50">
+            <polygon id="pointerTinner" points="25,0 0,43.4 50,43.4"
+                style="stroke: {pointerTColor}" />
+        </svg>
     </div>
     <div id="pointerO" ref="pointerO"
-        style="left: {pointerOLeft}px; top: {pointerOTop}px; background-color: {pointerOColor};">
+        style="left: {pointerOLeft}px; top: {pointerOTop}px; border-color: {pointerOColor};">
     </div>
     <div id="pointerX" ref="pointerX"
-        style="left: {pointerXLeft}px; top: {pointerXTop}px; background-color: {pointerXColor};">
+        style="left: {pointerXLeft}px; top: {pointerXTop}px;">
+        <svg id="pointerXinner" height="50" width="50">
+            <path d="M 0,0 l 50,50 M 50,0 l -50,50"
+                style="stroke: {pointerXColor};" />
+        </svg>
     </div>
     <div id="pointerS" ref="pointerS"
-        style="left: {pointerSLeft}px; top: {pointerSTop}px; background-color: {pointerSColor};">
+        style="left: {pointerSLeft}px; top: {pointerSTop}px; border-color: {pointerSColor};">
     </div>
 
     <div class="wrapper_msg invisible">
@@ -40,19 +48,21 @@
         });
 
         self.on('mount', function () {
-            self.pointerTTop = self.refs.colorwheel.offsetTop + self.refs.colorwheel.height / 2 - 30;
-            self.pointerOLeft = self.refs.colorwheel.offsetLeft + 30;
-            self.pointerXTop = self.refs.colorwheel.offsetTop + self.refs.colorwheel.height / 2 + 30;
-            self.pointerSLeft = self.refs.colorwheel.offsetLeft - 30;
+            // self.pointerTTop = self.refs.colorwheel.offsetTop + self.refs.colorwheel.height / 2 - 90;
+            // self.pointerOLeft = self.refs.colorwheel.offsetLeft + 30;
+            // self.pointerXTop = self.refs.colorwheel.offsetTop + self.refs.colorwheel.height / 2 + 30;
+            // self.pointerSLeft = self.refs.colorwheel.offsetLeft - 90;
 
             var pointerS = self.root.querySelector('#pointerS');
-            var pointerT = self.root.querySelector('#pointerT');
+            var pointerT = self.root.querySelector('#pointerTinner');
             var pointerO = self.root.querySelector('#pointerO');
-            var pointerX = self.root.querySelector('#pointerX');
+            var pointerX = self.root.querySelector('#pointerXinner');
+            var touchrect = self.root.querySelector('.touchrect');
             addHandlers(pointerS);
             addHandlers(pointerT);
             addHandlers(pointerO);
             addHandlers(pointerX);
+            addHandlers(touchrect);
 
             onResize();
         });
@@ -61,20 +71,22 @@
             window.addPointerDownHandler(pointer, function (event) {
                 self.drag = true;
                 switch (event.toElement.id) {
-                    case "pointerT":
+                    case "pointerTinner":
                         self.actualPointer = 0;
                         break;
                     case "pointerO":
                         self.actualPointer = 1;
                         break;
-                    case "pointerX":
+                    case "pointerXinner":
                         self.actualPointer = 2;
                         break;
                     case "pointerS":
                         self.actualPointer = 3;
                         break;
+                    case "touchrect":
+                        break;
                     default:
-                        console.log("wo hast du geklickt?");
+                        console.log("wo hast du geklickt?", event.toElement);
                 }
                 handleEvent(event);
             });
@@ -142,26 +154,43 @@
 
         function updatePointer(id) {
             var point = getPointFromColor(self.color.toHsv());
+            var c = new tinycolor({
+                h: self.color.getOriginalInput().h,
+                s: 1 - self.color.getOriginalInput().s,
+                v: self.color.getOriginalInput().v - 0.5
+            });
             switch (id) {
                 case 0:
                     self.pointerTLeft = (point.x - 25);
-                    self.pointerTTop = (point.y - 25);
-                    // self.pointerTColor = self.color.toHexString();
+                    self.pointerTTop = (point.y - 21.7);
+                    self.pointerTColor = c.toHexString();
+                    self.pointerOColor = new tinycolor("white");
+                    self.pointerXColor = new tinycolor("white");
+                    self.pointerSColor = new tinycolor("white");
                     break;
                 case 1:
                     self.pointerOLeft = (point.x - 25);
                     self.pointerOTop = (point.y - 25);
-                    // self.pointerOColor = self.color.toHexString();
+                    self.pointerTColor = new tinycolor("white");
+                    self.pointerOColor = c.toHexString();
+                    self.pointerXColor = new tinycolor("white");
+                    self.pointerSColor = new tinycolor("white");
                     break;
                 case 2:
                     self.pointerXLeft = (point.x - 25);
                     self.pointerXTop = (point.y - 25);
-                    // self.pointerXColor = self.color.toHexString();
+                    self.pointerTColor = new tinycolor("white");
+                    self.pointerOColor = new tinycolor("white");
+                    self.pointerXColor = c.toHexString();
+                    self.pointerSColor = new tinycolor("white");
                     break;
                 case 3:
                     self.pointerSLeft = (point.x - 25);
                     self.pointerSTop = (point.y - 25);
-                    // self.pointerSColor = self.color.toHexString();
+                    self.pointerTColor = new tinycolor("white");
+                    self.pointerOColor = new tinycolor("white");
+                    self.pointerXColor = new tinycolor("white");
+                    self.pointerSColor = c.toHexString();
                     break;
             }
         }
@@ -258,92 +287,45 @@
         #pointerO,
         #pointerS,
         #pointerT {
+            width: 50px;
+            height: 50px;
+            position: absolute;
             z-index: 2;
+            left: calc(50% - 25px);
+            top: calc(50% - 21.7px);
         }
 
         #pointerT {
             /* Dreieck */
-
-            --t: 2px;
-            --c: white;
-
-            width: 50px;
-            position: absolute;
-            left: calc(50% - 25px);
-            top: calc(50% - 25px);
-            display: inline-block;
-            border: var(--t) solid transparent;
-            border-bottom-color: var(--c);
-            background:
-                /* Left side */
-                linear-gradient(to bottom left,
-                    transparent 49.5%, var(--c) 50% calc(50% + var(--t)),
-                    transparent calc(50% + var(--t) + 1px)) right,
-                /* right side */
-                linear-gradient(to bottom right,
-                    transparent 49.5%, var(--c) 50% calc(50% + var(--t)),
-                    transparent calc(50% + var(--t) + 1px)) left;
-            background-size: 50% 100%;
-            background-origin: border-box;
-            background-repeat: no-repeat;
+            height: 43.4px;
         }
 
-        #pointerT:before {
-            content: "";
-            display: block;
-            padding-top: 86.6%;
+        #pointerTinner {
+            fill: transparent;
+            stroke: white;
+            stroke-width: 2;
         }
 
         #pointerS {
             /* Viereck */
-            width: 50px;
-            height: 50px;
-            position: absolute;
             border: 2px solid #FFFFFF;
             border-radius: 0;
-            left: calc(50% - 25px);
-            top: calc(50% - 25px);
         }
 
         #pointerO {
             /* Kreis */
-            width: 50px;
-            height: 50px;
-            position: absolute;
             border: 2px solid #FFFFFF;
             border-radius: 25px;
-            left: calc(50% - 25px);
-            top: calc(50% - 25px);
         }
 
         #pointerX {
             /* Kreuz */
-            width: 50px;
-            height: 50px;
-            position: absolute;
-            left: calc(50% - 25px);
-            top: calc(50% - 25px);
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
         }
 
-        #pointerX::before,
-        #pointerX::after {
-            position: absolute;
-            content: '';
-            width: 100%;
-            height: 4px;
-            /* cross thickness */
-            background-color: white;
-        }
-
-        #pointerX::before {
-            transform: rotate(45deg);
-        }
-
-        #pointerX::after {
-            transform: rotate(-45deg);
+        #pointerXinner {
+            fill: transparent;
+            stroke: #FFFFFF;
+            stroke-width: 2;
         }
     </style>
 </colorwheel>
