@@ -5,6 +5,10 @@ const NUS_TX_CHARACTERISTIC_UUID = '6e400003-b5a3-f393-e0a9-e50e24dcca9e';
 const DEVICE_NAME = 'PSX-Light';
 
 export default class Bluetooth {
+    PROTOCOL_CMD_CONNECTED = 0xA0;
+    PROTOCOL_CMD_SET_ICON_COLOR = 0xA1;
+    PROTOCOL_CMD_SET_BRIGHTNESS = 0xA2;
+
     /**
      * @class Bluetooth
      * @constructs
@@ -23,10 +27,8 @@ export default class Bluetooth {
         return new Promise((resolve, reject) => {
             if (this.device) {
                 if (this.device.gatt.connected) {
-                    console.log("connected");
                     resolve();
                 } else {
-                    console.log("connect");
                     this.device.gatt.connect()
                         .then(server => {
                             return server.getPrimaryServices();

@@ -53,15 +53,14 @@ import BleUART from './js/bluetooth';
             var buf = new Uint8Array(data);
             for (let i = 0; i < buf.length; i++) {
                 switch (buf[i]) {
-                    case 0xB0:
-                    case 0xB1:
-                    case 0xB2:
-                    case 0xB3:
-                        var color = new tinycolor({ r: buf[i + 1], g: buf[i + 2], b: buf[i + 3] });
-                        self.refs.colortab.setColor(buf[i] - 0xb0, color);
-                        i += 3; /* consumed 3 data bytes */
+                    case ble.PROTOCOL_CMD_SET_ICON_COLOR:
+                        self.refs.colortab.setColor(
+                            buf[i + 1],
+                            new tinycolor({ r: buf[i + 2], g: buf[i + 3], b: buf[i + 4] })
+                        );
+                        i += 4; /* consumed 4 data bytes */
                         break;
-                    case 0xB4:
+                    case ble.PROTOCOL_CMD_SET_BRIGHTNESS:
                         self.refs.colortab.setBrightness(buf[i + 1] / 256);
                         i += 1; /* consumed 1 data byte */
                         break;
@@ -90,7 +89,7 @@ import BleUART from './js/bluetooth';
                         self.showConnect = false;
                         self.update();
                         showMessage('connected', 'status');
-                        ble.send([0xA0, 1])
+                        ble.send([ble.PROTOCOL_CMD_CONNECTED, 1])
                             .catch(error => {
                                 self.sending = false;
                                 showMessage(error, 'error')
@@ -126,7 +125,7 @@ import BleUART from './js/bluetooth';
                 stopConnectionTimer();
                 self.showConnect = true;
                 self.update();
-                ble.send([0xA0, 0x00])
+                ble.send([ble.PROTOCOL_CMD_CONNECTED, 0x00])
                     .then(() => {
                         ble.disconnect();
                         showMessage("disconnected", 'info');
@@ -158,7 +157,7 @@ import BleUART from './js/bluetooth';
         }
 
         function sendBrightnessToPSXLight() {
-            var setBrightness = [0xA2, self.brightness * 0xFF]
+            var setBrightness = [ble.PROTOCOL_CMD_SET_BRIGHTNESS, self.brightness * 0xFF]
 
             if (!self.sending) {
                 resetConnectionTimer();
@@ -174,7 +173,7 @@ import BleUART from './js/bluetooth';
         }
 
         function sendValuesToPSXLight() {
-            var setRGB = [0xA1, self.currentDigit, self.currentColor.r, self.currentColor.g, self.currentColor.b]
+            var setRGB = [ble.PROTOCOL_CMD_SET_ICON_COLOR, self.currentDigit, self.currentColor.r, self.currentColor.g, self.currentColor.b]
 
             if (!self.sending) {
                 resetConnectionTimer();
