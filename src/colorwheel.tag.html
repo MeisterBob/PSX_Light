@@ -19,7 +19,8 @@
     <div id="pointerX" ref="pointerX"
         style="left: {pointerXLeft}px; top: {pointerXTop}px;">
         <svg id="pointerXinner" height="50" width="50">
-            <path d="M 0,0 l 50,50 M 50,0 l -50,50"
+            <polygon id="pointerXinner"
+                points="10,0 0,10 15,25 0,40 10,50 25,35 40,50 50,40 35,25 50,10 40,0 25,15"
                 style="stroke: {pointerXColor};" />
         </svg>
     </div>
@@ -33,26 +34,22 @@
 
     <script>
         var self = this;
-        self.color = new tinycolor(opts.color);
+        self.color = new Array(4).fill(new tinycolor(opts.color));
         self.actualPointer = -1;
 
-        self.setColor = function (color) {
-            self.color = new tinycolor(color);
+        self.setColor = function (pointer, color) {
+            self.color[pointer] = new tinycolor(color);
             if (self.isMounted) {
                 self.update();
             }
         };
 
         self.on('update', function () {
-            updatePointer(self.actualPointer);
+            for (var i = 0; i <= 3; i++)
+                updatePointer(i);
         });
 
         self.on('mount', function () {
-            // self.pointerTTop = self.refs.colorwheel.offsetTop + self.refs.colorwheel.height / 2 - 90;
-            // self.pointerOLeft = self.refs.colorwheel.offsetLeft + 30;
-            // self.pointerXTop = self.refs.colorwheel.offsetTop + self.refs.colorwheel.height / 2 + 30;
-            // self.pointerSLeft = self.refs.colorwheel.offsetLeft - 90;
-
             var pointerS = self.root.querySelector('#pointerS');
             var pointerT = self.root.querySelector('#pointerTinner');
             var pointerO = self.root.querySelector('#pointerO');
@@ -153,46 +150,38 @@
         }
 
         function updatePointer(id) {
-            var point = getPointFromColor(self.color.toHsv());
-            var c = new tinycolor({
-                h: self.color.getOriginalInput().h,
-                s: 1 - self.color.getOriginalInput().s,
-                v: self.color.getOriginalInput().v - 0.5
-            });
+            if (id < 0 || id > 3)
+                return;
+
+            var point = getPointFromColor(self.color[id].toHsv());
             switch (id) {
                 case 0:
                     self.pointerTLeft = (point.x - 25);
                     self.pointerTTop = (point.y - 21.7);
-                    self.pointerTColor = c.toHexString();
-                    self.pointerOColor = new tinycolor("white");
-                    self.pointerXColor = new tinycolor("white");
-                    self.pointerSColor = new tinycolor("white");
                     break;
                 case 1:
                     self.pointerOLeft = (point.x - 25);
                     self.pointerOTop = (point.y - 25);
-                    self.pointerTColor = new tinycolor("white");
-                    self.pointerOColor = c.toHexString();
-                    self.pointerXColor = new tinycolor("white");
-                    self.pointerSColor = new tinycolor("white");
                     break;
                 case 2:
                     self.pointerXLeft = (point.x - 25);
                     self.pointerXTop = (point.y - 25);
-                    self.pointerTColor = new tinycolor("white");
-                    self.pointerOColor = new tinycolor("white");
-                    self.pointerXColor = c.toHexString();
-                    self.pointerSColor = new tinycolor("white");
                     break;
                 case 3:
                     self.pointerSLeft = (point.x - 25);
                     self.pointerSTop = (point.y - 25);
-                    self.pointerTColor = new tinycolor("white");
-                    self.pointerOColor = new tinycolor("white");
-                    self.pointerXColor = new tinycolor("white");
-                    self.pointerSColor = c.toHexString();
                     break;
             }
+
+            var c = new tinycolor({
+                h: self.color[id].toHsv().h,
+                s: 1 - self.color[id].toHsv().s,
+                v: self.color[id].toHsv().v - 0.5
+            });
+            self.pointerTColor = (self.actualPointer == 0) ? c.toHexString() : new tinycolor("white");
+            self.pointerOColor = (self.actualPointer == 1) ? c.toHexString() : new tinycolor("white");
+            self.pointerXColor = (self.actualPointer == 2) ? c.toHexString() : new tinycolor("white");
+            self.pointerSColor = (self.actualPointer == 3) ? c.toHexString() : new tinycolor("white");
         }
 
         function handleEvent(event) {
@@ -206,16 +195,14 @@
                 y = event.clientY;
             }
             point = getCirclePoint(x, y);
-            self.color = getColorFromPoint(point);
-
-            showMessage(self.actualPointer, 'status');
+            self.color[self.actualPointer] = getColorFromPoint(point);
 
             self.update();
             fireEvent();
         }
 
         function fireEvent() {
-            var data = { color: self.color.toRgb(), pointer: self.actualPointer };
+            var data = { color: self.color[self.actualPointer].toRgb(), pointer: self.actualPointer };
             self.trigger('color', data);
         }
 

@@ -22,7 +22,6 @@ import BleUART from './js/bluetooth';
 
     <script>
         var self = this;
-        var LED_MAP = [5, 0, 6, 1, 7, 2, 8, 3, 9, 4];
         var ble = new BleUART();
         self.showConnect = true;
         self.currentColor = {
@@ -30,6 +29,7 @@ import BleUART from './js/bluetooth';
             g: 255,
             b: 255
         };
+        self.brightness = 0;
         self.currentDigit = 0;
 
         self.buttons = [{
@@ -49,7 +49,34 @@ import BleUART from './js/bluetooth';
             self.update();
         });
 
+        ble.on('receive', (data) => {
+            var buf = new Uint8Array(data);
+            for (let i = 0; i < buf.length; i++) {
+                switch (buf[i]) {
+                    case 0xB0:
+                    case 0xB1:
+                    case 0xB2:
+                    case 0xB3:
+                        var color = new tinycolor({ r: buf[i + 1], g: buf[i + 2], b: buf[i + 3] });
+                        self.refs.colortab.setColor(buf[i] - 0xb0, color);
+                        i += 3; /* consumed 3 data bytes */
+                        break;
+                    case 0xB4:
+                        self.refs.colortab.setBrightness(buf[i + 1] / 256);
+                        i += 1; /* consumed 1 data byte */
+                        break;
+                    default:
+                        console.log("received", buf[i]);
+                }
+            }
+        });
+
         self.on('mount', () => {
+            self.refs.colortab.on('brightness', data => {
+                self.brightness = data.brightness;
+                sendBrightnessToPSXLight();
+            });
+
             self.refs.colortab.on('color', data => {
                 self.currentColor = data.color;
                 self.currentDigit = data.pointer;
@@ -128,6 +155,22 @@ import BleUART from './js/bluetooth';
                 self.refs.message.parentElement.classList.add('invisible');
                 self.timer = null;
             }, 5000);
+        }
+
+        function sendBrightnessToPSXLight() {
+            var setBrightness = [0xA2, self.brightness * 0xFF]
+
+            if (!self.sending) {
+                resetConnectionTimer();
+                self.sending = true;
+                ble.send(setBrightness)
+                    .then(() => {
+                        self.sending = false;
+                    }).catch(error => {
+                        self.sending = false;
+                        showMessage(error, 'error')
+                    });
+            }
         }
 
         function sendValuesToPSXLight() {

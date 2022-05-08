@@ -13,14 +13,13 @@
             g: 0xff,
             b: 0xff
         });
-        self.brightness = 0.3;
+        self.brightness = 0;
         self.actualPointer = -1;
 
         self.on('mount', function () {
-            self.refs.slider.on('value', function (value) {
+            self.refs.slider.on('brightness', function (value) {
                 self.brightness = value;
-                self.update();
-                fireColorEvent();
+                fireBrightnessEvent();
             });
 
             self.refs.colorwheel.on('color', function (value) {
@@ -33,12 +32,23 @@
             self.update();
         });
 
+        self.setColor = function setColor(pointer, color) {
+            self.refs.colorwheel.setColor(pointer, color);
+        }
+
+        self.setBrightness = function setBrightness(brightness) {
+            self.brightness = brightness;
+            self.refs.slider.setValue(brightness);
+        }
+
         function getCurrentColor() {
             var rgb = self.color.toRgb();
-            rgb.r = Math.round(rgb.r * self.brightness);
-            rgb.g = Math.round(rgb.g * self.brightness);
-            rgb.b = Math.round(rgb.b * self.brightness);
             return rgb;
+        }
+
+        function fireBrightnessEvent() {
+            var data = { brightness: self.brightness };
+            self.trigger('brightness', data);
         }
 
         function fireColorEvent() {

@@ -1,6 +1,7 @@
 /* global riot */
 const NUS_SERVICE_UUID = '6e400001-b5a3-f393-e0a9-e50e24dcca9e';
 const NUS_RX_CHARACTERISTIC_UUID = '6e400002-b5a3-f393-e0a9-e50e24dcca9e';
+const NUS_TX_CHARACTERISTIC_UUID = '6e400003-b5a3-f393-e0a9-e50e24dcca9e';
 const DEVICE_NAME = 'PSX-Light';
 
 export default class Bluetooth {
@@ -10,7 +11,8 @@ export default class Bluetooth {
      */
     constructor() {
         this.device = null;
-        this.characteristic = null;
+        this.rx_characteristic = null;
+        this.tx_characteristic = null;
         riot.observable(this);
     }
 
@@ -21,17 +23,31 @@ export default class Bluetooth {
         return new Promise((resolve, reject) => {
             if (this.device) {
                 if (this.device.gatt.connected) {
+                    console.log("connected");
                     resolve();
                 } else {
+                    console.log("connect");
                     this.device.gatt.connect()
                         .then(server => {
-                            return server.getPrimaryService(NUS_SERVICE_UUID);
-                        }).then(service => {
-                            return service.getCharacteristic(NUS_RX_CHARACTERISTIC_UUID);
-                        }).then(characteristic => {
-                            this.characteristic = characteristic;
-                        }).then(() => {
-                            resolve();
+                            return server.getPrimaryServices();
+                        }).then(services => {
+                            let queue = Promise.resolve();
+                            services.forEach(service => {
+                                queue = queue.then(_ => service.getCharacteristics().then(characteristics => {
+                                    characteristics.forEach(characteristic => {
+                                        if (characteristic.uuid == NUS_RX_CHARACTERISTIC_UUID) {
+                                            this.rx_characteristic = characteristic;
+                                        } else if (characteristic.uuid == NUS_TX_CHARACTERISTIC_UUID) {
+                                            this.tx_characteristic = characteristic;
+                                            this.tx_characteristic.startNotifications()
+                                            // Set up event listener for when characteristic value changes.
+                                            this.tx_characteristic.addEventListener('characteristicvaluechanged',
+                                                this.onReceive.bind(this));
+                                        }
+                                    });
+                                }));
+                            });
+                            return queue;
                         }).catch(error => reject(error));
                 }
             } else {
@@ -46,16 +62,28 @@ export default class Bluetooth {
                     this.device.addEventListener('gattserverdisconnected', this.onDisconnected.bind(this));
                     return device.gatt.connect();
                 }).then(server => {
-                    return server.getPrimaryService(NUS_SERVICE_UUID);
-                }).then(service => {
-                    return service.getCharacteristic(NUS_RX_CHARACTERISTIC_UUID);
-                }).then(characteristic => {
-                    this.characteristic = characteristic;
+                    return server.getPrimaryServices();
+                }).then(services => {
+                    let queue = Promise.resolve();
+                    services.forEach(service => {
+                        queue = queue.then(_ => service.getCharacteristics().then(characteristics => {
+                            characteristics.forEach(characteristic => {
+                                if (characteristic.uuid == NUS_RX_CHARACTERISTIC_UUID) {
+                                    this.rx_characteristic = characteristic;
+                                } else if (characteristic.uuid == NUS_TX_CHARACTERISTIC_UUID) {
+                                    this.tx_characteristic = characteristic;
+                                    this.tx_characteristic.startNotifications()
+                                    // Set up event listener for when characteristic value changes.
+                                    this.tx_characteristic.addEventListener('characteristicvaluechanged',
+                                        this.onReceive.bind(this));
+                                }
+                            });
+                        }));
+                    });
+                    return queue;
                 }).then(() => {
                     resolve();
-                }).catch(error => {
-                    reject(error);
-                });
+                }).catch(error => { reject(error); });
             }
         });
     }
@@ -76,12 +104,12 @@ export default class Bluetooth {
      */
     send(data) {
         return new Promise((resolve, reject) => {
-            if (!this.device || !this.device.gatt.connected || !this.characteristic) {
+            if (!this.device || !this.device.gatt.connected || !this.rx_characteristic) {
                 reject('Not connected');
                 return;
             }
 
-            this.characteristic.writeValue(new Uint8Array(data))
+            this.rx_characteristic.writeValue(new Uint8Array(data))
                 .then(() => {
                     resolve();
                 }).catch(error => {
@@ -94,8 +122,12 @@ export default class Bluetooth {
      * @private
      */
     onDisconnected() {
-        this.characteristic = null;
+        this.rx_characteristic = null;
+        this.tx_characteristic = null;
         this.trigger('disconnect');
     }
 
+    onReceive(event) {
+        this.trigger('receive', event.currentTarget.value.buffer);
+    }
 }
