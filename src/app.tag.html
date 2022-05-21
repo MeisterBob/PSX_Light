@@ -5,7 +5,8 @@ import BleUART from './js/bluetooth';
         <div class="container">
             <color-tab ref="colortab" class="contentarea" color="#FFFFFF">
             </color-tab>
-            <!-- <digit-tab ref="digittab" class="contentarea" digit="0"></digit-tab> -->
+            <effect-tab ref="effecttab" class="contentarea" effect="0">
+            </effect-tab>
         </div>
         <div class="wrapper_msg invisible">
             <div ref="message"></div>
@@ -31,16 +32,18 @@ import BleUART from './js/bluetooth';
         };
         self.brightness = 0;
         self.currentDigit = 0;
+        self.currentEffect = 0;
 
         self.buttons = [{
             title: 'Color',
-            icon: 'b',
+            icon: '0',
             type: 'color'
-        }/* , {
-            title: 'Digit',
-            icon: 'n',
-            type: 'digit'
-        } */];
+        },
+        {
+            title: 'Effect',
+            icon: 'e',
+            type: 'effect'
+        }];
         self.activeTab = 'color';
 
         ble.on('disconnect', () => {
@@ -64,6 +67,14 @@ import BleUART from './js/bluetooth';
                         self.refs.colortab.setBrightness(buf[i + 1] / 256);
                         i += 1; /* consumed 1 data byte */
                         break;
+                    case ble.PROTOCOL_CMD_SET_EFFECT:
+                        self.refs.effecttab.setEffect(buf[i + 1]);
+                        i += 1; /* consumed 1 data byte */
+                        break;
+                    case ble.PROTOCOL_CMD_ADD_EFFECT:
+                        self.refs.effecttab.addEffect(buf[i + 1]);
+                        i += 1; /* consumed 1 data byte */
+                        break;
                     default:
                         console.log("received", buf[i]);
                 }
@@ -80,6 +91,11 @@ import BleUART from './js/bluetooth';
                 self.currentColor = data.color;
                 self.currentDigit = data.pointer;
                 sendValuesToPSXLight();
+            });
+
+            self.refs.effecttab.on('effect', effect => {
+                self.currentEffect = effect;
+                sendEffectToPSXLight();
             });
 
             self.refs.connectdialog.on('connect', () => {
@@ -187,6 +203,22 @@ import BleUART from './js/bluetooth';
                     });
             }
         }
+
+        function sendEffectToPSXLight() {
+            var setEffect = [ble.PROTOCOL_CMD_SET_EFFECT, self.currentEffect]
+
+            if (!self.sending) {
+                resetConnectionTimer();
+                self.sending = true;
+                ble.send(setEffect)
+                    .then(() => {
+                        self.sending = false;
+                    }).catch(error => {
+                        self.sending = false;
+                        showMessage(error, 'error')
+                    });
+            }
+        }
     </script>
 
 
@@ -217,7 +249,7 @@ import BleUART from './js/bluetooth';
             left: 0;
             top: 0;
             bottom: 0;
-            width: 100%;
+            width: 200%;
             display: flex;
             display: -webkit-flex;
             -webkit-transition: left 0.5s ease-in-out;

@@ -1,4 +1,6 @@
-node_modules/
-src/js/main.min.js
-src/favicon.ico
 package-lock.json
+node_modules/
+src/favicon.ico
+src/icons.svg
+src/js/main.min.js
+src/res/fontello-eb95db56.zip

@@ -1,0 +1,115 @@
+<!--
+    <svg width="220" height="52" title="erg">
+        <polygon points="30,5 5,48.4 55,48.4" stroke="white"
+            stroke-width="5" fill="transparent" />
+        <circle cx="85" cy="26" r="23" stroke="white"
+            stroke-width="5" fill="transparent" />
+        <polygon
+            points=" 125,2.5 115,12.5 128.5,26 115,39.5 125,49.5 138.5,36 152,49.5 162,39.5 148.5,26 162,12.5 152,2.5 138.5,16"
+            stroke="white" stroke-width="4"
+            fill="transparent" />
+        <polygon points="170,2.5 170,49.5 217,49.5 217,2.5"
+            stroke="white" stroke-width="5"
+            fill="transparent" />
+    </svg>
+-->
+<effect-tab>
+    <div class="effect">
+        <div class="effect_wrapper">
+            <div class="effect_inline">
+                <button each={ effects }
+                    class="{selected: selectedEffect == id}"
+                    onclick="{ effectClick }">
+                    <div class="icon">{ id }</div>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        var self = this;
+        self.selectedEffect = opts.effect;
+
+        self.effects = [];
+
+        self.on('mount', function () {
+
+        });
+
+        self.setEffect = function (effect) {
+            self.selectedEffect = effect;
+            if (self.isMounted) {
+                self.update();
+            }
+        };
+
+        self.addEffect = function (effect) {
+            var found = false;
+            self.effects.forEach(element => {
+                if (element.id == effect) {
+                    found = true;
+                }
+            });
+            if (!found) {
+                console.log("adding effect", effect);
+                self.effects.push({
+                    id: effect,
+                });
+                if (self.isMounted) {
+                    self.update();
+                }
+            }
+        };
+
+        function fireEffectEvent() {
+            self.trigger('effect', self.selectedEffect);
+        }
+
+        self.effectClick = (event) => {
+            self.update({
+                selectedEffect: event.item.id
+            });
+            fireEffectEvent();
+        };
+    </script>
+
+    <style>
+        .effect {
+            position: relative;
+            width: 100%;
+            text-align: center;
+            flex: 1;
+        }
+
+        .effect_wrapper {
+            height: 100%;
+        }
+
+        .effect_inline {
+            padding: 25px;
+            text-align: center;
+            color: #ffffff;
+            opacity: 1;
+            /* display: grid; */
+            height: 100%;
+        }
+
+        .effect_inline button {
+            background-color: slategrey;
+            margin: 20px;
+            text-align: center;
+            display: inline;
+            font-size: 90px;
+            width: 1.5em;
+            height: 1.5em;
+        }
+
+        .effect_inline button.selected {
+            background-color: green;
+        }
+
+        .effect_inline buttin div.icon {
+            width: 90px;
+        }
+    </style>
+</effect-tab>

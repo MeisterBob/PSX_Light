@@ -8,6 +8,8 @@ export default class Bluetooth {
     PROTOCOL_CMD_CONNECTED = 0xA0;
     PROTOCOL_CMD_SET_ICON_COLOR = 0xA1;
     PROTOCOL_CMD_SET_BRIGHTNESS = 0xA2;
+    PROTOCOL_CMD_SET_EFFECT = 0xA3;
+    PROTOCOL_CMD_ADD_EFFECT = 0xA4;
 
     /**
      * @class Bluetooth
