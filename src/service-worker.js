@@ -27,13 +27,13 @@ self.addEventListener("install", (event) => {
             // response isn't fulfilled from the HTTP cache; i.e., it will be from
             // the network.
             console.log("register service-worker");
-            await cache.add(new Request("/index.html", { cache: "reload" }));
-            await cache.add(new Request("/css/index.css", { cache: "reload" }));
-            await cache.add(new Request("/js/lib/tinycolor.min.js", { cache: "reload" }));
-            await cache.add(new Request("/js/lib/riot.min.js", { cache: "reload" }));
-            await cache.add(new Request("/js/main.min.js", { cache: "reload" }));
-            await cache.add(new Request("/res/fontello.ttf", { cache: "reload" }));
-            await cache.add(new Request("/res/colorwheel.png", { cache: "reload" }));
+            await cache.add(new Request("index.html", { cache: "reload" }));
+            await cache.add(new Request("css/index.css", { cache: "reload" }));
+            await cache.add(new Request("js/lib/tinycolor.min.js", { cache: "reload" }));
+            await cache.add(new Request("js/lib/riot.min.js", { cache: "reload" }));
+            await cache.add(new Request("js/main.min.js", { cache: "reload" }));
+            await cache.add(new Request("res/fontello.ttf", { cache: "reload" }));
+            await cache.add(new Request("res/colorwheel.png", { cache: "reload" }));
         })()
     );
     // Force the waiting service worker to become the active service worker.
@@ -79,13 +79,13 @@ self.addEventListener("fetch", (event) => {
                     console.log("Fetch failed; returning offline page instead.", error);
 
                     const cache = await caches.open(CACHE_NAME);
-                    const cachedResponse = await cache.match("/index.html");
-                    await cache.match("/css/index.css");
-                    await cache.match("/js/lib/tinycolor.min.js");
-                    await cache.match("/js/lib/riot.min.js");
-                    await cache.match("/js/main.min.js");
-                    await cache.match("/res/fontello.ttf");
-                    await cache.match("/res/colorwheel.png");
+                    const cachedResponse = await cache.match("index.html");
+                    await cache.match("css/index.css");
+                    await cache.match("js/lib/tinycolor.min.js");
+                    await cache.match("js/lib/riot.min.js");
+                    await cache.match("js/main.min.js");
+                    await cache.match("res/fontello.ttf");
+                    await cache.match("res/colorwheel.png");
                     return cachedResponse;
                 }
             })()

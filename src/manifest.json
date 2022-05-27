@@ -3,20 +3,20 @@
     "name": "PSX-Light Controler",
     "icons": [
         {
-            "src": "/res/psx-icon-192.png",
+            "src": "res/psx-icon-192.png",
             "type": "image/png",
             "sizes": "192x192"
         },
         {
-            "src": "/res/psx-icon-512.png",
+            "src": "res/psx-icon-512.png",
             "type": "image/png",
             "sizes": "512x512"
         }
     ],
-    "start_url": "/",
+    "start_url": "/PSX_Light/",
     "background_color": "#3367D6",
     "display": "standalone",
-    "scope": "/",
+    "scope": "/PSX_Light/",
     "theme_color": "#3367D6",
     "lang": "en_US"
 }
