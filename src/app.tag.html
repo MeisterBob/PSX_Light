@@ -108,9 +108,15 @@ import BleUART from './js/bluetooth';
                         ble.send([ble.PROTOCOL_CMD_CONNECTED, 1])
                             .catch(error => {
                                 self.sending = false;
+                                self.showConnect = true;
+                                self.update();
                                 showMessage(error, 'error')
                             });
-                    }).catch(error => showMessage(error, 'error'));
+                    }).catch(error => {
+                        self.showConnect = true;
+                        self.update();
+                        showMessage(error, 'error');
+                    });
             });
 
             if ("serviceWorker" in navigator) {
@@ -183,6 +189,8 @@ import BleUART from './js/bluetooth';
                         showMessage("disconnected", 'info');
                     }).catch(error => {
                         self.sending = false;
+                        self.showConnect = true;
+                        self.update();
                         showMessage(error, 'error')
                     })
             }, 60000);
@@ -219,6 +227,8 @@ import BleUART from './js/bluetooth';
                         self.sending = false;
                     }).catch(error => {
                         self.sending = false;
+                        self.showConnect = true;
+                        self.update();
                         showMessage(error, 'error')
                     });
             }
@@ -235,6 +245,8 @@ import BleUART from './js/bluetooth';
                         self.sending = false;
                     }).catch(error => {
                         self.sending = false;
+                        self.showConnect = true;
+                        self.update();
                         showMessage(error, 'error')
                     });
             }
@@ -251,6 +263,8 @@ import BleUART from './js/bluetooth';
                         self.sending = false;
                     }).catch(error => {
                         self.sending = false;
+                        self.showConnect = true;
+                        self.update();
                         showMessage(error, 'error')
                     });
             }
