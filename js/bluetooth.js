@@ -28,12 +28,12 @@ export default class Bluetooth {
     connect() {
         return new Promise((resolve, reject) => {
             if (this.device) {
-                console.log("device");
+                // console.log("device");
                 if (this.device.gatt.connected) {
-                    console.log("connected");
+                    // console.log("connected");
                     resolve();
                 } else {
-                    console.log("else");
+                    // console.log("else");
                     this.device.gatt.connect()
                         .then(server => {
                             return server.getPrimaryServices();
@@ -43,17 +43,17 @@ export default class Bluetooth {
                                 queue = queue.then(_ => service.getCharacteristics().then(characteristics => {
                                     characteristics.forEach(characteristic => {
                                         if (characteristic.uuid == NUS_RX_CHARACTERISTIC_UUID) {
-                                            console.log("RX Charcteristic found");
+                                            // console.log("RX Charcteristic found");
                                             this.rx_characteristic = characteristic;
                                         } else if (characteristic.uuid == NUS_TX_CHARACTERISTIC_UUID) {
-                                            console.log("TX Charcteristic found");
+                                            // console.log("TX Charcteristic found");
                                             this.tx_characteristic = characteristic;
                                             this.tx_characteristic.startNotifications()
                                             // Set up event listener for when characteristic value changes.
                                             this.tx_characteristic.addEventListener('characteristicvaluechanged',
                                                 this.onReceive.bind(this));
                                         } else {
-                                            console.log("unknown Charcteristic found");
+                                            // console.log("unknown Charcteristic found");
                                         }
                                     });
                                 }));
@@ -62,7 +62,7 @@ export default class Bluetooth {
                         }).catch(error => reject(error));
                 }
             } else {
-                console.log("requestDevice");
+                // console.log("requestDevice");
                 navigator.bluetooth.requestDevice({
                     filters: [{
                         services: [NUS_SERVICE_UUID]
@@ -70,33 +70,33 @@ export default class Bluetooth {
                         name: DEVICE_NAME
                     }]
                 }).then(device => {
-                    console.log("device");
+                    // console.log("device");
                     this.device = device;
                     this.device.addEventListener('gattserverdisconnected', this.onDisconnected.bind(this));
                     return device.gatt.connect();
                 }).then(server => {
-                    console.log("server", server);
+                    // console.log("server", server);
                     var services = server.getPrimaryServices();
-                    console.log(services);
+                    // console.log(services);
                     return services;
                 }).then(services => {
-                    console.log("services", services);
+                    // console.log("services", services);
                     let queue = Promise.resolve();
                     services.forEach(service => {
                         queue = queue.then(_ => service.getCharacteristics().then(characteristics => {
                             characteristics.forEach(characteristic => {
                                 if (characteristic.uuid == NUS_RX_CHARACTERISTIC_UUID) {
-                                    console.log("RX Charcteristic found");
+                                    // console.log("RX Charcteristic found");
                                     this.rx_characteristic = characteristic;
                                 } else if (characteristic.uuid == NUS_TX_CHARACTERISTIC_UUID) {
-                                    console.log("TX Charcteristic found");
+                                    // console.log("TX Charcteristic found");
                                     this.tx_characteristic = characteristic;
                                     this.tx_characteristic.startNotifications()
                                     // Set up event listener for when characteristic value changes.
                                     this.tx_characteristic.addEventListener('characteristicvaluechanged',
                                         this.onReceive.bind(this));
                                 } else {
-                                    console.log("unknown Charcteristic found");
+                                    // console.log("unknown Charcteristic found");
                                 }
                             });
                         }));
@@ -104,7 +104,7 @@ export default class Bluetooth {
                     return queue;
                 }).then(() => {
                     resolve();
-                })/* .catch(error => { reject(error); }) */;
+                }).catch(error => { reject(error); });
             }
         });
     }
@@ -130,7 +130,7 @@ export default class Bluetooth {
                 return;
             }
 
-            console.log("BLE send: ", new Uint8Array(data));
+            // console.log("BLE send: ", new Uint8Array(data));
 
             this.rx_characteristic.writeValue(new Uint8Array(data))
                 .then(() => {
