@@ -53,6 +53,7 @@ import BleUART from './js/bluetooth';
         });
 
         ble.on('receive', (data) => {
+            resetConnectionTimer();
             var buf = new Uint8Array(data);
             for (let i = 0; i < buf.length; i++) {
                 switch (buf[i]) {
@@ -168,18 +169,22 @@ import BleUART from './js/bluetooth';
 
         function stopConnectionTimer() {
             if (self.connectionTimer) {
+                // console.log("stopping connection timer");
                 clearTimeout(self.connectionTimer);
                 self.connectionTimer = null;
             }
         };
 
         function resetConnectionTimer() {
+            // console.log("reseting connection timer");
             stopConnectionTimer();
             startConnectionTimer();
         };
 
         function startConnectionTimer() {
+            // console.log("starting connection timer");
             self.connectionTimer = setTimeout(() => {
+                // console.log("connection timeout");
                 stopConnectionTimer();
                 self.showConnect = true;
                 self.update();
@@ -205,6 +210,7 @@ import BleUART from './js/bluetooth';
             self.refs.message.className = type;
             self.refs.message.textContent = text;
 
+            // console.log(type, text);
             self.refs.message.parentElement.classList.remove('invisible');
 
             if (self.timer) {
